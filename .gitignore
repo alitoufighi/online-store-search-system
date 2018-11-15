@@ -1,0 +1,8 @@
+*.out
+loadbalancer
+presenter
+worker
+laptops/
+im/
+*.log
+*.txt
