@@ -6,5 +6,6 @@
 std::string remove_space(char*);
 std::string lower(std::string);
 bool is_num(std::string);
+bool compare(std::string, std::string);
 
 #endif
