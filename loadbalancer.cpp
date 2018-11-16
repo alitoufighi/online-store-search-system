@@ -13,6 +13,7 @@
 using namespace std;
 
 int main() {
+    cout << ">>> By Mohammad Ali Toufighi 810195371 <<<" << endl << endl;
     string msg;
     while (getline(cin, msg)) {
         msg = remove_space((char*)msg.c_str());
@@ -59,10 +60,8 @@ int main() {
         // read file names from directory
         if ((dir = opendir(folder_name.c_str())) != NULL) {
             while ((ent = readdir(dir)) != NULL) {
-                if (ent->d_name[0] != DOT) {
-                    // cout << ent->d_name << endl;
+                if (ent->d_name[0] != DOT)
                     files.push_back(ent->d_name);
-                }
             }
             closedir(dir);
         } else {
