@@ -16,25 +16,22 @@ int main() {
     cout << ">>> By Mohammad Ali Toufighi 810195371 <<<" << endl << endl;
     string msg;
     while (getline(cin, msg)) {
-        msg = remove_space((char*)msg.c_str());
-        stringstream line(msg);
-        string sort_type;
+        string sort_type, tok;
         string sort_by = EMPTY_STR; // to be checked if not assigned
-        vector<Pair> fields; // first is field_name and second is field_value
-        int prc_num = -1; // to be checked if not assigned
         string folder_name = EMPTY_STR; // to be checked if not assigned
-        string tok;
-        pid_t cpid;
-        vector<string> files;
+        vector<Pair> fields; // first is field_name and second is field_value
+        vector<string> files; // file names
+        int prc_num = -1; // to be checked if not assigned
 
-        DIR *dir;
-        struct dirent *ent;
+        msg = remove_space((char*)msg.c_str()); // removing excess spaces in input 
 
         if (lower(msg) == QUIT) {
-            cout << "Exiting..." << endl;
+            cout << "exiting..." << endl;
             exit(0);
         }
 
+        // tokenizing and process input
+        stringstream line(msg);
         while (getline(line, tok, DASH)) {
             stringstream line(tok);
             string first, second;
@@ -51,43 +48,45 @@ int main() {
                 fields.push_back(Pair(first, second));
         }
 
-        if(folder_name == EMPTY_STR || prc_num == -1) {
-            cerr << "Invalid Inputs." << endl;
+        if(folder_name == EMPTY_STR || prc_num <= 0) {
+            cerr << "invalid inputs." << endl;
             continue;
         }
-        vector<vector<string> > worker_files(prc_num);
 
         // read file names from directory
+        DIR *dir;
+        struct dirent *ent;
         if ((dir = opendir(folder_name.c_str())) != NULL) {
             while ((ent = readdir(dir)) != NULL) {
-                if (ent->d_name[0] != DOT)
+                if (ent->d_name[0] != DOT) // '.' and '..'
                     files.push_back(ent->d_name);
             }
             closedir(dir);
         } else {
-            cerr << "Error in opening directory!" << endl;
-            return -1;
+            cerr << "no such file or directory: " << folder_name << endl;
+            continue;
         }
 
+        vector<vector<string> > worker_files(prc_num);
         // assigning files to workers according to number of processes
-        for (int i = 0; i < files.size(); ++i)
+        for (size_t i = 0; i < files.size(); ++i)
             worker_files[i % prc_num].push_back(files[i]);
 
         // creating named pipe
         string fifo_path = FIFO_TEMP_PATH;
         unlink(FIFO_TEMP_PATH); // to remove previous file
         if (mkfifo(FIFO_TEMP_PATH, 0666) < 0) {
-            cerr << "Error in creating fifo." << endl;
+            cerr << "error in creating fifo." << endl;
             return -1;
         }
 
         // creating presenter process
-        int ppid = fork();
+        pid_t cpid = fork();
         // if it's presenter (child)
-        if (ppid == 0) {
+        if (cpid == 0) {
             char* argv[] = {NULL};
             execve(PRESENTER_FILENAME, argv, NULL);
-        } else if(ppid > 0) { // if it's parent (lb)
+        } else if(cpid > 0) { // if it's load balancer (parent)
             stringstream ss;
             ss << LOADBALANCER_HEADER << endl << prc_num << WS;   // HEADER\n`prc_num`\n
             ss << sort_by << WS << sort_type << endl; // `sort_by` `sort_type`\n
@@ -96,26 +95,26 @@ int main() {
                 pipe_stream << ss.str();
                 pipe_stream.close();
             } else {
-                cerr << "ERROR OPENING FILE IN LB" << endl;
+                cerr << "error in opening named pipe." << endl;
                 exit(-1);
             }
         } else {
-            cerr << "Oops! Failed to create Presenter process" << endl;
+            cerr << "failed to create presenter process." << endl;
             return -1;
         }
 
         // creating worker processes
-        for (int i = 0; i < prc_num; ++i) {
+        for (size_t i = 0; i < prc_num; ++i) {
             int fd[2];
             if (pipe(fd) != 0) {
-                cerr << "pipe failed." << endl;
+                cerr << "failed to create pipe." << endl;
                 return -1;
             }
             int cpid = fork();
             if (cpid == 0) {
                 close(fd[1]);
                 if(dup2(fd[0], STDIN_FILENO)==-1) {
-                    cerr << "Dup failed" <<endl;
+                    cerr << "failed to duplicate pipe fd to cin." <<endl;
                     return -1;
                 }
                 char* argv[] = {NULL};
@@ -125,17 +124,17 @@ int main() {
                 close(fd[0]);
                 stringstream ss;
                 ss << LOADBALANCER_HEADER << endl << worker_files[i].size() << endl << fields.size() << endl;
-                for (int j = 0; j < worker_files[i].size(); ++j)
+                for (size_t j = 0; j < worker_files[i].size(); ++j)
                     ss << folder_name << SLASH << worker_files[i][j] << endl;
-                for (int j = 0; j < fields.size(); ++j)
+                for (size_t j = 0; j < fields.size(); ++j)
                     ss << fields[j].first << endl << fields[j].second << endl;
                 if (write(fd[1], ss.str().c_str(), ss.str().length()) < 0) {
-                    cerr << "Write failed!" << endl;
+                    cerr << "write failed!" << endl;
                     return -1;
                 }
                 close(fd[1]);
                 if (wait(NULL)==-1) {
-                    cerr << "Error in wait" << endl;
+                    cerr << "error in wait." << endl;
                     return -1;
                 }
             } else {

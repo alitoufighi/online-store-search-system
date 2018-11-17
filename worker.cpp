@@ -8,10 +8,9 @@
 using namespace std;
 
 int main() {
-    string header, num_of_files_str, num_of_fields_str;
-    int num_of_files;
-    int num_of_fields;
-    vector<string> file_fields;
+    string header;
+    int num_of_files, num_of_fields;
+    vector<string> file_fields; // container for fields which files are described upon
     vector<string> results; // container for filtered results
     vector<int> filter_columns; // container for indices of filtering columns
 
@@ -40,11 +39,11 @@ int main() {
             string tok;
 
             // read tokens of file (values)
-            for (int j = 0; getline(ss, tok, WS); ++j) {
+            for (size_t j = 0; getline(ss, tok, WS); ++j) {
                 if (first_line_read == false) { // if we haven't read the first row (the fields)
-                    if (i == 0) { // only for first file!
+                    if (i == 0) { // only for first file
                         file_fields.push_back(tok);
-                        for (int k = 0; k < search_fields.size(); ++k) {
+                        for (size_t k = 0; k < search_fields.size(); ++k) {
                             if (tok == search_fields[k].first)
                                 filter_columns.push_back(j);
                         }
@@ -62,7 +61,7 @@ int main() {
     }
 
     // making results unique (if pushed back by two filters)
-    std::vector<string>::iterator it;
+    vector<string>::iterator it;
     it = unique(results.begin(), results.end());
     results.resize(distance(results.begin(), it));
 
@@ -70,9 +69,9 @@ int main() {
     stringstream ss;
     ss << WORKER_HEADER << endl;
     ss << file_fields.size() << WS << results.size() << endl;
-    for (int i = 0; i < file_fields.size(); ++i)
+    for (size_t i = 0; i < file_fields.size(); ++i)
         ss << file_fields[i] << endl;
-    for (int i = 0; i < results.size(); ++i)
+    for (size_t i = 0; i < results.size(); ++i)
         ss << results[i] << endl;
 
     // write results to named pipe
@@ -82,6 +81,6 @@ int main() {
         pipe_stream.close();
     }
     else
-        cerr << "ERROR OPENING FILE!" << endl;
+        cerr << "Error in opening file!" << endl;
     return 0;
 }
