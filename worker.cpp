@@ -3,6 +3,7 @@
 #include <sstream>
 #include <vector>
 #include <string>
+#include <algorithm>
 #include "defines.hpp"
 using namespace std;
 
@@ -59,6 +60,11 @@ int main() {
         }
         f.close();
     }
+
+    // making results unique
+    std::vector<string>::iterator it;
+    it = unique(results.begin(), results.end());
+    results.resize(distance(results.begin(), it));
     
 
     // gathering results into a stringstream
