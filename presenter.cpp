@@ -31,16 +31,15 @@ int main() {
             vector<string> worker_data;
             workers_received++; // add this to number of workers' files received
             
+            // reading number of fields and results
             getline(pipe_stream, line);
-            num_of_fields = atoi(line.c_str());
-            getline(pipe_stream, line);
-            num_of_reults = atoi(line.c_str());
+            stringstream ss(line);
+            ss >> num_of_fields >> num_of_reults;
 
             // // finding which one is sorting value (if any)
-            for(int i = 0; i < num_of_fields && getline(pipe_stream, line); ++i){
+            for(int i = 0; i < num_of_fields && getline(pipe_stream, line); ++i)
                 if(line == sort_by)
                     sort_field_index = i;
-            }
 
             // reading results of this worker
             for(int i = 0; i < num_of_reults && getline(pipe_stream, line); ++i)

@@ -69,7 +69,7 @@ int main() {
     // gathering results into a stringstream
     stringstream ss;
     ss << WORKER_HEADER << endl;
-    ss << file_fields.size() << endl << results.size() << endl;
+    ss << file_fields.size() << WS << results.size() << endl;
     for (int i = 0; i < file_fields.size(); ++i)
         ss << file_fields[i] << endl;
     for (int i = 0; i < results.size(); ++i)
