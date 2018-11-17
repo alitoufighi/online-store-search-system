@@ -61,11 +61,10 @@ int main() {
         f.close();
     }
 
-    // making results unique
+    // making results unique (if pushed back by two filters)
     std::vector<string>::iterator it;
     it = unique(results.begin(), results.end());
     results.resize(distance(results.begin(), it));
-    
 
     // gathering results into a stringstream
     stringstream ss;
