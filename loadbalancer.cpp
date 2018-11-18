@@ -14,6 +14,24 @@ using namespace std;
 
 int main() {
     cout << ">>> By Mohammad Ali Toufighi 810195371 <<<" << endl << endl;
+
+
+    // creating named pipe
+    // string fifo_path = FIFO_TEMP_PATH;
+    unlink(FIFO_TEMP_PATH); // to remove previous file
+    if (mkfifo(FIFO_TEMP_PATH, 0666) < 0) {
+        cerr << "error in creating fifo." << endl;
+        exit(1);
+    }
+
+    // creating presenter process
+    pid_t ppid = fork();
+    if (ppid == 0) {
+        char* argv[] = {NULL};
+        execve(PRESENTER_FILENAME, argv, NULL);
+    }
+
+
     string msg;
     while (getline(cin, msg)) {
         string sort_type, tok;
@@ -27,8 +45,15 @@ int main() {
         msg = remove_space((char*)msg.c_str()); // removing excess spaces in input 
 
         if (lower(msg) == QUIT) {
-            cout << "exiting..." << endl;
-            exit(0);
+            // sending quit message to presenter
+            stringstream ss;
+            ss << LOADBALANCER_HEADER << endl << QUIT << endl;
+            ofstream pipe_stream(FIFO_TEMP_PATH, ofstream::in | ofstream::out);
+            if (pipe_stream.is_open()) {
+                pipe_stream << ss.str();
+                pipe_stream.close();
+            }
+            break;
         }
 
         // tokenizing and process input
@@ -73,36 +98,48 @@ int main() {
         for (size_t i = 0; i < files.size(); ++i)
             worker_files[i % prc_num].push_back(files[i]);
 
-        // creating named pipe
-        // string fifo_path = FIFO_TEMP_PATH;
-        unlink(FIFO_TEMP_PATH); // to remove previous file
-        if (mkfifo(FIFO_TEMP_PATH, 0666) < 0) {
-            cerr << "error in creating fifo." << endl;
-            exit(1);
+
+        // writing data to presenter
+        /////////////////// WRITING PID OF LOADBALANCER TO PRESENTER?
+        stringstream ss;
+        ss << LOADBALANCER_HEADER << endl << prc_num << WS;   // HEADER\n`prc_num`\n
+        ss << sort_by << WS << sort_type << endl; // `sort_by` `sort_type`\n
+        ofstream pipe_stream(FIFO_TEMP_PATH);
+        if (pipe_stream.is_open()) {
+            pipe_stream << ss.str();
+            pipe_stream.close();
         }
 
-        // creating presenter process
-        pid_t cpid = fork();
-        // if it's presenter (child)
-        if (cpid == 0) {
-            char* argv[] = {NULL};
-            execve(PRESENTER_FILENAME, argv, NULL);
-        } else if(cpid > 0) { // if it's load balancer (parent)
-            stringstream ss;
-            ss << LOADBALANCER_HEADER << endl << prc_num << WS;   // HEADER\n`prc_num`\n
-            ss << sort_by << WS << sort_type << endl; // `sort_by` `sort_type`\n
-            ofstream pipe_stream(FIFO_TEMP_PATH);
-            if (pipe_stream.is_open()) {
-                pipe_stream << ss.str();
-                pipe_stream.close();
-            } else {
-                cerr << "error in opening named pipe." << endl;
-                exit(1);
-            }
-        } else {
-            cerr << "failed to create presenter process." << endl;
-            exit(1);
-        }
+        // // creating named pipe
+        // // string fifo_path = FIFO_TEMP_PATH;
+        // unlink(FIFO_TEMP_PATH); // to remove previous file
+        // if (mkfifo(FIFO_TEMP_PATH, 0666) < 0) {
+        //     cerr << "error in creating fifo." << endl;
+        //     exit(1);
+        // }
+
+        // // creating presenter process
+        // pid_t cpid = fork();
+        // // if it's presenter (child)
+        // if (cpid == 0) {
+        //     char* argv[] = {NULL};
+        //     execve(PRESENTER_FILENAME, argv, NULL);
+        // } else if(cpid > 0) { // if it's load balancer (parent)
+        //     stringstream ss;
+        //     ss << LOADBALANCER_HEADER << endl << prc_num << WS;   // HEADER\n`prc_num`\n
+        //     ss << sort_by << WS << sort_type << endl; // `sort_by` `sort_type`\n
+        //     ofstream pipe_stream(FIFO_TEMP_PATH);
+        //     if (pipe_stream.is_open()) {
+        //         pipe_stream << ss.str();
+        //         pipe_stream.close();
+        //     } else {
+        //         cerr << "error in opening named pipe." << endl;
+        //         exit(1);
+        //     }
+        // } else {
+        //     cerr << "failed to create presenter process." << endl;
+        //     exit(1);
+        // }
 
         // creating worker processes
         for (int i = 0; i < prc_num; ++i) {
@@ -149,5 +186,11 @@ int main() {
         for(size_t i = 0; i < worker_ids.size(); ++i)
             waitpid(worker_ids[i], NULL, (int)NULL);
     }
+
+    // wait for presenter to quit
+    waitpid(ppid, NULL, (int)NULL);
+    
+    cout << "exiting..." << endl;
+
     return 0;
 }
