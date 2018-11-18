@@ -14,9 +14,11 @@ int main() {
     string line, sort_by;
     int workers_received = 0, num_of_reults, num_of_workers;
     vector<string> results; // final container vector
+    bool loadbalancer_read = false; // to ensure we read from load balancer before we break the while
 
     while(true) {
-        vector<string> tmp; // used in merge sort
+        vector<string> mergesort_tmp; // used in merge sort
+
         // read header
         getline(pipe_stream, line);
 
@@ -25,6 +27,7 @@ int main() {
             getline(pipe_stream, line);
             stringstream ss(line);
             ss >> num_of_workers >> sort_by >> sort_type; // if sorting is not provided, these values will be empty strings (which is ok)
+            loadbalancer_read = true;
         }
         // if we found a data from our workers
         else if (line == WORKER_HEADER) {
@@ -45,20 +48,20 @@ int main() {
             for(int i = 0; i < num_of_reults && getline(pipe_stream, line); ++i)
                 worker_data.push_back(line);
             
-            // using in-place merge sort :)
+            // using in-place merge sort
             sort(worker_data.begin(), worker_data.end(), compare);
-            tmp.reserve(results.size() + worker_data.size());
-            merge(worker_data.begin(), worker_data.end(), results.begin(), results.end(), back_inserter(tmp), compare);
-            results.swap(tmp);
+            mergesort_tmp.reserve(results.size() + worker_data.size());
+            merge(worker_data.begin(), worker_data.end(), results.begin(), results.end(), back_inserter(mergesort_tmp), compare);
+            results.swap(mergesort_tmp);
 
             // check if we are done
-            if(workers_received >= num_of_workers)
+            if(workers_received >= num_of_workers && loadbalancer_read) // value of `num_of_workers` must be valid
                 break;
         }
     }
 
     // printing results on consolse
-    for(int i = 0; i<results.size(); ++i)
+    for(size_t i = 0; i < results.size(); ++i)
         cout << results[i] << endl;
     cout << "--------------------" << endl;
 
