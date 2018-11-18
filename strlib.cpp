@@ -13,7 +13,7 @@ string remove_space(char* line) {
     char* i = line, *j = line;
     while (*j != '\0') {
         *i = *j++;
-        if(*i != WS)
+        if (*i != WS)
             i++;
     }
     *i = '\0';
@@ -42,8 +42,7 @@ bool is_num(string s1) {
 bool compare(string s1, string s2) {
     stringstream ss1(s1), ss2(s2);
     string field1, field2;
-    int i = 0;
-    while (i < num_of_fields) {
+    for (int i = 0; i < num_of_fields; ++i){
         getline(ss1, field1, WS);
         getline(ss2, field2, WS);
         if (i == sort_field_index) {
@@ -53,7 +52,6 @@ bool compare(string s1, string s2) {
             } else
                 return sort_type == ASCEND ? (field1 < field2) : (field1 > field2);
         }
-        i++;
     }
-    return false; // if sorting not provided by user, this does not do anything :D
+    return s1 < s2; // if sorting not provided by user, this does not do anything :D
 }

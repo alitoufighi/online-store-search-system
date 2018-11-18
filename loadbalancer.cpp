@@ -74,7 +74,7 @@ int main() {
                 fields.push_back(Pair(first, second));
         }
 
-        if(folder_name == EMPTY_STR || prc_num <= 0) {
+        if (folder_name == EMPTY_STR || prc_num <= 0) {
             cout << "invalid inputs." << endl;
             continue;
         }
@@ -100,46 +100,18 @@ int main() {
 
 
         // writing data to presenter
-        /////////////////// WRITING PID OF LOADBALANCER TO PRESENTER?
         stringstream ss;
-        ss << LOADBALANCER_HEADER << endl << prc_num << WS;   // HEADER\n`prc_num`\n
-        ss << sort_by << WS << sort_type << endl; // `sort_by` `sort_type`\n
+        ss << LOADBALANCER_HEADER << endl << prc_num << WS;
+        ss << sort_by << WS << sort_type << endl;
         ofstream pipe_stream(FIFO_TEMP_PATH);
         if (pipe_stream.is_open()) {
             pipe_stream << ss.str();
             pipe_stream.close();
         }
-
-        // // creating named pipe
-        // // string fifo_path = FIFO_TEMP_PATH;
-        // unlink(FIFO_TEMP_PATH); // to remove previous file
-        // if (mkfifo(FIFO_TEMP_PATH, 0666) < 0) {
-        //     cerr << "error in creating fifo." << endl;
-        //     exit(1);
-        // }
-
-        // // creating presenter process
-        // pid_t cpid = fork();
-        // // if it's presenter (child)
-        // if (cpid == 0) {
-        //     char* argv[] = {NULL};
-        //     execve(PRESENTER_FILENAME, argv, NULL);
-        // } else if(cpid > 0) { // if it's load balancer (parent)
-        //     stringstream ss;
-        //     ss << LOADBALANCER_HEADER << endl << prc_num << WS;   // HEADER\n`prc_num`\n
-        //     ss << sort_by << WS << sort_type << endl; // `sort_by` `sort_type`\n
-        //     ofstream pipe_stream(FIFO_TEMP_PATH);
-        //     if (pipe_stream.is_open()) {
-        //         pipe_stream << ss.str();
-        //         pipe_stream.close();
-        //     } else {
-        //         cerr << "error in opening named pipe." << endl;
-        //         exit(1);
-        //     }
-        // } else {
-        //     cerr << "failed to create presenter process." << endl;
-        //     exit(1);
-        // }
+        else {
+            cerr << "error in opening file." << endl;
+            exit(1);
+        }
 
         // creating worker processes
         for (int i = 0; i < prc_num; ++i) {
@@ -151,7 +123,7 @@ int main() {
             pid_t cpid = fork();
             if (cpid == 0) {
                 close(fd[1]); // close write end of pipe
-                if(dup2(fd[0], STDIN_FILENO)==-1) { // duplicate read end of pipe to STDIN
+                if (dup2(fd[0], STDIN_FILENO)==-1) { // duplicate read end of pipe to STDIN
                     cerr << "failed to duplicate pipe fd to cin." <<endl;
                     exit(1);
                 }
@@ -183,7 +155,7 @@ int main() {
 
         // waits for workers to finish
         // prevents conflict on named pipe when large inputs arrive
-        for(size_t i = 0; i < worker_ids.size(); ++i)
+        for (size_t i = 0; i < worker_ids.size(); ++i)
             waitpid(worker_ids[i], NULL, (int)NULL);
     }
 

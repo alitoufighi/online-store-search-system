@@ -49,7 +49,6 @@ int main() {
                                 filter_columns.push_back(j);
                         }
                     }
-                    // size of search_fileds is equal to filter_columns
                 } else {
                     for (int k = 0; k < filter_columns.size(); ++k) {
                         if (j == filter_columns[k]
@@ -58,7 +57,7 @@ int main() {
                     }
                 }
             }
-            if(should_filter && first_line_read)
+            if (should_filter && first_line_read)
                 results.push_back(line);
 
             first_line_read = true;
@@ -82,6 +81,6 @@ int main() {
         pipe_stream.close();
     }
     else
-        cerr << "Error in opening file!" << endl;
+        cerr << "error in opening file." << endl;
     return 0;
 }

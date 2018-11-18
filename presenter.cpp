@@ -16,16 +16,16 @@ int main() {
     vector<string> results; // final container vector
     bool loadbalancer_read = false; // to ensure we read from load balancer before we break the while
 
-    while(true) {
+    while (true) {
         vector<string> mergesort_tmp; // used in merge sort
 
         // read header
         getline(pipe_stream, line);
 
         // if we found loadbalancer's data
-        if(line == LOADBALANCER_HEADER) {
+        if (line == LOADBALANCER_HEADER) {
             getline(pipe_stream, line);
-            if(line == QUIT)
+            if (line == QUIT)
                 break;
 
             stringstream ss(line);
@@ -43,24 +43,29 @@ int main() {
             ss >> num_of_fields >> num_of_reults;
 
             // // finding which one is sorting value (if any)
-            for(int i = 0; i < num_of_fields && getline(pipe_stream, line); ++i)
-                if(line == sort_by)
+            for (int i = 0; i < num_of_fields && getline(pipe_stream, line); ++i)
+                if (line == sort_by)
                     sort_field_index = i;
 
             // reading results of this worker
-            for(int i = 0; i < num_of_reults && getline(pipe_stream, line); ++i)
+            for (int i = 0; i < num_of_reults && getline(pipe_stream, line); ++i)
                 worker_data.push_back(line);
             
             // using in-place merge sort
             sort(worker_data.begin(), worker_data.end(), compare);
             mergesort_tmp.reserve(results.size() + worker_data.size());
             merge(worker_data.begin(), worker_data.end(), results.begin(), results.end(), back_inserter(mergesort_tmp), compare);
+            
+            // this makes all results unique (since we may have duplicate items in multiple files)
+            mergesort_tmp.erase( unique(mergesort_tmp.begin(),mergesort_tmp.end() ),mergesort_tmp.end() );
+            
+            // return original values to results vector
             results.swap(mergesort_tmp);
 
             // check if we are done
-            if(workers_received >= num_of_workers && loadbalancer_read) { // value of `num_of_workers` must be valid
+            if (workers_received >= num_of_workers && loadbalancer_read) { // value of `num_of_workers` must be valid
                 // printing results on consolse
-                for(size_t i = 0; i < results.size(); ++i)
+                for (size_t i = 0; i < results.size(); ++i)
                     cout << results[i] << endl;
                 cout << "--------------------" << endl;
 
