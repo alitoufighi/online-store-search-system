@@ -60,6 +60,8 @@ int main() {
         }
     }
 
+    
+
     // printing results on consolse
     for(size_t i = 0; i < results.size(); ++i)
         cout << results[i] << endl;
