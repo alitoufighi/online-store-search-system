@@ -25,10 +25,9 @@ int main() {
         // if we found loadbalancer's data
         if(line == LOADBALANCER_HEADER) {
             getline(pipe_stream, line);
-            if(line == QUIT){
-                cout << "exiting presenter..." << endl;
-                exit(0);
-            }
+            if(line == QUIT)
+                break;
+
             stringstream ss(line);
             ss >> num_of_workers >> sort_by >> sort_type; // if sorting is not provided, these values will be empty strings (which is ok)
             loadbalancer_read = true;
@@ -65,13 +64,15 @@ int main() {
                     cout << results[i] << endl;
                 cout << "--------------------" << endl;
 
-                 // reset
+                // reset values
                 workers_received = 0;
                 loadbalancer_read = false;
                 results.clear();
             }
         }
     }
+
+    cout << "exiting presenter..." << endl;
 
     // closing input stream for named pipe
     pipe_stream.close();
