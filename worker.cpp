@@ -35,11 +35,12 @@ int main() {
 
         // reading from file
         while (getline(f, line)) {
+            bool should_filter = true;
             stringstream ss(line);
             string tok;
 
-            // read tokens of file (values)
-            for (size_t j = 0; getline(ss, tok, WS); ++j) {
+            // read tokens of line (values)
+            for (int j = 0; getline(ss, tok, WS); ++j) {
                 if (first_line_read == false) { // if we haven't read the first row (the fields)
                     if (i == 0) { // only for first file
                         file_fields.push_back(tok);
@@ -48,22 +49,22 @@ int main() {
                                 filter_columns.push_back(j);
                         }
                     }
+                    // size of search_fileds is equal to filter_columns
                 } else {
                     for (int k = 0; k < filter_columns.size(); ++k) {
-                        if (j == filter_columns[k] && tok == search_fields[k].second) // if we should filter this one
-                            results.push_back(line);
+                        if (j == filter_columns[k]
+                            && tok != search_fields[k].second) // if we should filter this one
+                                should_filter = false;
                     }
                 }
             }
+            if(should_filter && first_line_read)
+                results.push_back(line);
+
             first_line_read = true;
         }
         f.close();
     }
-
-    // making results unique (if pushed back by two filters)
-    vector<string>::iterator it;
-    it = unique(results.begin(), results.end());
-    results.resize(distance(results.begin(), it));
 
     // gathering results into a stringstream
     stringstream ss;
@@ -74,7 +75,7 @@ int main() {
     for (size_t i = 0; i < results.size(); ++i)
         ss << results[i] << endl;
 
-    // write results to named pipe
+    // write final results to named pipe
     ofstream pipe_stream(FIFO_TEMP_PATH, ofstream::in | ofstream::out);
     if (pipe_stream.is_open()) {
         pipe_stream << ss.str();
