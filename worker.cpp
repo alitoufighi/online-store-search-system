@@ -45,42 +45,26 @@ int main() {
                     if (i == 0) { // only for first file
                         file_fields.push_back(tok);
                         for (size_t k = 0; k < search_fields.size(); ++k) {
-                            if (tok == search_fields[k].first){
-                                // cout << file_fields[j] << j << endl;
+                            if (tok == search_fields[k].first)
                                 filter_columns.push_back(j);
-                            }
                         }
                     }
                     // size of search_fileds is equal to filter_columns
                 } else {
-                    
                     for (int k = 0; k < filter_columns.size(); ++k) {
-                        // cout << j << ' ' << filter_columns[k] << ' ' << tok << ' ' << search_fields[k].second << endl;
                         if (j == filter_columns[k]
                             && tok != search_fields[k].second) // if we should filter this one
                                 should_filter = false;
-                            // results.push_back(line);
                     }
-                    
                 }
             }
             if(should_filter && first_line_read)
                 results.push_back(line);
-            // cout << file_fields.size() << endl;
+
             first_line_read = true;
         }
         f.close();
     }
-
-    // vector<string> final_results; // nasty
-    // for(size_t i = 0; i < results.size(); ++i) {
-    //     if(count(results.begin(), results.end(), results[i]) == filter_columns.size())
-    //         final_results.push_back(results[i]);
-    // }
-    // // making results unique (if pushed back by two filters)
-    // vector<string>::iterator it;
-    // it = unique(results.begin(), results.end());
-    // results.resize(distance(results.begin(), it));
 
     // gathering results into a stringstream
     stringstream ss;
