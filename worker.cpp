@@ -46,7 +46,7 @@ int main() {
                         file_fields.push_back(tok);
                         for (size_t k = 0; k < search_fields.size(); ++k) {
                             if (tok == search_fields[k].first){
-                                cout << file_fields[j] << j << endl;
+                                // cout << file_fields[j] << j << endl;
                                 filter_columns.push_back(j);
                             }
                         }
@@ -55,6 +55,7 @@ int main() {
                 } else {
                     
                     for (int k = 0; k < filter_columns.size(); ++k) {
+                        // cout << j << ' ' << filter_columns[k] << ' ' << tok << ' ' << search_fields[k].second << endl;
                         if (j == filter_columns[k]
                             && tok != search_fields[k].second) // if we should filter this one
                                 should_filter = false;
@@ -63,7 +64,7 @@ int main() {
                     
                 }
             }
-            if(should_filter)
+            if(should_filter && first_line_read)
                 results.push_back(line);
             // cout << file_fields.size() << endl;
             first_line_read = true;
