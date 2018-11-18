@@ -25,6 +25,10 @@ int main() {
         // if we found loadbalancer's data
         if(line == LOADBALANCER_HEADER) {
             getline(pipe_stream, line);
+            if(line == QUIT){
+                cout << "exiting presenter..." << endl;
+                exit(0);
+            }
             stringstream ss(line);
             ss >> num_of_workers >> sort_by >> sort_type; // if sorting is not provided, these values will be empty strings (which is ok)
             loadbalancer_read = true;
@@ -55,17 +59,19 @@ int main() {
             results.swap(mergesort_tmp);
 
             // check if we are done
-            if(workers_received >= num_of_workers && loadbalancer_read) // value of `num_of_workers` must be valid
-                break;
+            if(workers_received >= num_of_workers && loadbalancer_read) { // value of `num_of_workers` must be valid
+                // printing results on consolse
+                for(size_t i = 0; i < results.size(); ++i)
+                    cout << results[i] << endl;
+                cout << "--------------------" << endl;
+
+                 // reset
+                workers_received = 0;
+                loadbalancer_read = false;
+                results.clear();
+            }
         }
     }
-
-    
-
-    // printing results on consolse
-    for(size_t i = 0; i < results.size(); ++i)
-        cout << results[i] << endl;
-    cout << "--------------------" << endl;
 
     // closing input stream for named pipe
     pipe_stream.close();
