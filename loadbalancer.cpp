@@ -21,6 +21,7 @@ int main() {
         string folder_name = EMPTY_STR; // to be checked if not assigned
         vector<Pair> fields; // first is field_name and second is field_value
         vector<string> files; // file names
+        vector<pid_t> worker_ids; // process ids of workers (used in waitpid)
         int prc_num = -1; // to be checked if not assigned
 
         msg = remove_space((char*)msg.c_str()); // removing excess spaces in input 
@@ -49,7 +50,7 @@ int main() {
         }
 
         if(folder_name == EMPTY_STR || prc_num <= 0) {
-            cerr << "invalid inputs." << endl;
+            cout << "invalid inputs." << endl;
             continue;
         }
 
@@ -63,7 +64,7 @@ int main() {
             }
             closedir(dir);
         } else {
-            cerr << "no such file or directory: " << folder_name << endl;
+            cout << "no such file or directory: " << folder_name << endl;
             continue;
         }
 
@@ -73,11 +74,11 @@ int main() {
             worker_files[i % prc_num].push_back(files[i]);
 
         // creating named pipe
-        string fifo_path = FIFO_TEMP_PATH;
+        // string fifo_path = FIFO_TEMP_PATH;
         unlink(FIFO_TEMP_PATH); // to remove previous file
         if (mkfifo(FIFO_TEMP_PATH, 0666) < 0) {
             cerr << "error in creating fifo." << endl;
-            return -1;
+            exit(1);
         }
 
         // creating presenter process
@@ -96,32 +97,36 @@ int main() {
                 pipe_stream.close();
             } else {
                 cerr << "error in opening named pipe." << endl;
-                exit(-1);
+                exit(1);
             }
         } else {
             cerr << "failed to create presenter process." << endl;
-            return -1;
+            exit(1);
         }
 
         // creating worker processes
-        for (size_t i = 0; i < prc_num; ++i) {
+        for (int i = 0; i < prc_num; ++i) {
             int fd[2];
             if (pipe(fd) != 0) {
                 cerr << "failed to create pipe." << endl;
-                return -1;
+                exit(1);
             }
-            int cpid = fork();
+            pid_t cpid = fork();
             if (cpid == 0) {
-                close(fd[1]);
-                if(dup2(fd[0], STDIN_FILENO)==-1) {
+                close(fd[1]); // close write end of pipe
+                if(dup2(fd[0], STDIN_FILENO)==-1) { // duplicate read end of pipe to STDIN
                     cerr << "failed to duplicate pipe fd to cin." <<endl;
-                    return -1;
+                    exit(1);
                 }
                 char* argv[] = {NULL};
                 execve(WORKER_FILENAME, argv, NULL);
             }
             else if (cpid > 0) {
-                close(fd[0]);
+                // adding worker process id
+                // used in wait at end of while
+                worker_ids.push_back(cpid);
+
+                close(fd[0]); // close read end of pipe
                 stringstream ss;
                 ss << LOADBALANCER_HEADER << endl << worker_files[i].size() << endl << fields.size() << endl;
                 for (size_t j = 0; j < worker_files[i].size(); ++j)
@@ -129,18 +134,20 @@ int main() {
                 for (size_t j = 0; j < fields.size(); ++j)
                     ss << fields[j].first << endl << fields[j].second << endl;
                 if (write(fd[1], ss.str().c_str(), ss.str().length()) < 0) {
-                    cerr << "write failed!" << endl;
-                    return -1;
+                    cerr << "failed to write on unnamed pipe." << endl;
+                    exit(1);
                 }
-                close(fd[1]);
-                if (wait(NULL)==-1) {
-                    cerr << "error in wait." << endl;
-                    return -1;
-                }
+                close(fd[1]); // close write end of pipe (writing finished)
             } else {
                 cerr << "fork failed." << endl;
+                exit(1);
             }
         }
+
+        // waits for workers to finish
+        // prevents conflict on named pipe when large inputs arrive
+        for(size_t i = 0; i < worker_ids.size(); ++i)
+            waitpid(worker_ids[i], NULL, (int)NULL);
     }
     return 0;
 }
