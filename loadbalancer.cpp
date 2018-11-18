@@ -137,7 +137,7 @@ int main() {
 
                 close(fd[0]); // close read end of pipe
                 stringstream ss;
-                ss << LOADBALANCER_HEADER << endl << worker_files[i].size() << endl << fields.size() << endl;
+                ss << LOADBALANCER_HEADER << endl << worker_files[i].size() << WS << fields.size() << endl;
                 for (size_t j = 0; j < worker_files[i].size(); ++j)
                     ss << folder_name << SLASH << worker_files[i][j] << endl;
                 for (size_t j = 0; j < fields.size(); ++j)

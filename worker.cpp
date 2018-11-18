@@ -12,17 +12,21 @@ int main() {
     int num_of_files, num_of_fields;
     vector<string> file_fields; // container for fields which files are described upon
     vector<string> results; // container for filtered results
-    vector<int> filter_columns; // container for indices of filtering columns
 
+    string line;
     // read end of pipe is mapped to cin
-    cin >> header >> num_of_files >> num_of_fields;
-
+    getline(cin, header);
+    getline(cin, line);
+    stringstream ss(line);
+    ss >> num_of_files >> num_of_fields;
     vector<string> files(num_of_files);
     vector<Pair> search_fields(num_of_fields);
+    vector<int> filter_columns(num_of_fields); // container for indices of filtering columns
 
     // reading file names
     for (int i = 0; i < num_of_files; ++i)
-        cin >> files[i];
+        getline(cin, files[i]);
+    
     // reading filtering fields
     for (int i = 0; i < num_of_fields; ++i)
         cin >> search_fields[i].first >> search_fields[i].second;
@@ -45,8 +49,9 @@ int main() {
                     if (i == 0) { // only for first file
                         file_fields.push_back(tok);
                         for (size_t k = 0; k < search_fields.size(); ++k) {
-                            if (tok == search_fields[k].first)
-                                filter_columns.push_back(j);
+                            if (tok == search_fields[k].first){
+                                filter_columns[k] = j;
+                            }
                         }
                     }
                 } else {
@@ -66,7 +71,8 @@ int main() {
     }
 
     // gathering results into a stringstream
-    stringstream ss;
+    // stringstream ss;
+    ss.clear();
     ss << WORKER_HEADER << endl;
     ss << file_fields.size() << WS << results.size() << endl;
     for (size_t i = 0; i < file_fields.size(); ++i)
