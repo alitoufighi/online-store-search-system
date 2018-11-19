@@ -71,7 +71,6 @@ int main() {
     }
 
     // gathering results into a stringstream
-    // stringstream ss;
     ss.clear();
     ss << WORKER_HEADER << endl;
     ss << file_fields.size() << WS << results.size() << endl;

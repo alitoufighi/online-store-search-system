@@ -15,9 +15,7 @@ using namespace std;
 int main() {
     cout << ">>> By Mohammad Ali Toufighi 810195371 <<<" << endl << endl;
 
-
     // creating named pipe
-    // string fifo_path = FIFO_TEMP_PATH;
     unlink(FIFO_TEMP_PATH); // to remove previous file
     if (mkfifo(FIFO_TEMP_PATH, 0666) < 0) {
         cerr << "error in creating fifo." << endl;
@@ -30,7 +28,6 @@ int main() {
         char* argv[] = {NULL};
         execve(PRESENTER_FILENAME, argv, NULL);
     }
-
 
     string msg;
     while (getline(cin, msg)) {
@@ -80,8 +77,8 @@ int main() {
         }
 
         // read file names from directory
-        DIR *dir;
-        struct dirent *ent;
+        DIR* dir;
+        struct dirent* ent;
         if ((dir = opendir(folder_name.c_str())) != NULL) {
             while ((ent = readdir(dir)) != NULL) {
                 if (ent->d_name[0] != DOT) // '.' and '..'
